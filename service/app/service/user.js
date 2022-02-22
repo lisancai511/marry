@@ -140,62 +140,77 @@ class UserService extends CommenService {
   }
   async createUserFromInter() {
     const { ctx } = this
-    const data = await ctx.curl(
-      'http://zzcc.yijiehunlian.com/index/lists2.html',
-      {
-        method: 'POST',
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          Cookie: 'PHPSESSID=gf5qa85tju3vav2qrnin1eprd1',
-        },
-        dataType: 'json',
-        data: {
-          page: 2,
-        },
-      }
-    )
-    data.data.data.data.forEach(async (item) => {
-      try {
-        let res = await axios({
-          url: item.upper,
-          method: 'GET',
-          responseType: 'stream',
-        })
-        console.log(res, 16444)
-        // await http.get(`${item.upper}`, (res) => {
-        //   console.log(res, 16000)
-        //   //用来存储图片二进制编码
-        //   // let imgData = ''
-        //   // //设置图片编码格式
-        //   // res.setEncoding('binary')
-        //   // //检测请求的数据
-        //   // res.on('data', (chunk) => {
-        //   //   imgData += chunk
-        //   // })
-        //   // //请求完成执行的回调
-        //   // res.on('end', async () => {
-        //   //   // 通过文件流操作保存图片
-        //   //   await fs.writeFile(
-        //   //     `./public/image/${item.id}`,
-        //   //     imgData,
-        //   //     'binary',
-        //   //     (error) => {
-        //   //       if (error) {
-        //   //         console.log('下载失败')
-        //   //       } else {
-        //   //         console.log('下载成功！' + Math.random())
-        //   //       }
-        //   //     }
-        //   //   )
-        //   // })
-        // })
-      } catch (error) {
-        console.log(error)
-      }
-    })
+    // for (let i = 0; i < 1000; i++) {
+    //   const data = await ctx.curl(
+    //     'http://zzcc.yijiehunlian.com/index/lists2.html',
+    //     {
+    //       method: 'POST',
+    //       headers: {
+    //         'X-Requested-With': 'XMLHttpRequest',
+    //         Cookie: 'PHPSESSID=fb34ou055t160p6og660s3bbb6',
+    //       },
+    //       dataType: 'json',
+    //       data: {
+    //         page: i,
+    //       },
+    //     }
+    //   )
+    //   data.data.data.data.forEach(async (item) => {
+    //     try {
+    //       let obj = {
+    //         ...item,
+    //         origin_id: item.id,
+    //       }
+    //       await ctx.model.User.create(obj)
+    //     } catch (error) {
+    //       console.log(error)
+    //     }
+    //   })
+    // }
+
     return {
       code: 0,
-      data: data.data.data.data,
+    }
+  }
+  async getWx() {
+    const { ctx } = this
+    const { count, rows } = await ctx.model.User.findAndCountAll()
+    let arr = []
+    await rows.forEach(async (item) => {
+      try {
+        let data = await ctx.curl(
+          `http://zzcc.yijiehunlian.com/index/hqwx3/wuid/${item.id}.html`,
+          {
+            method: 'get',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              Cookie: 'PHPSESSID=fb34ou055t160p6og660s3bbb6',
+            },
+            dataType: 'json',
+          }
+        )
+        try {
+          let str = data.data.match(/value=.+"/g)
+          console.log(str, item.id, 19333)
+          arr.push(str[0])
+          if (Array.isArray(str)) {
+            const userModel = await ctx.model.CarType.findOne({
+              where: {
+                id: item.id,
+              },
+            })
+            console.log(userModel, 199)
+            await userModel.update({
+              wx_phone: str[0],
+            })
+          }
+        } catch (error) {}
+      } catch (error) {}
+    })
+    console.log(arr, 210)
+    return {
+      code: 0,
+      data: arr,
     }
   }
 }

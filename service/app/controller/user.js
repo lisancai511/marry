@@ -63,6 +63,10 @@ class UserController extends CommonController {
     const ctx = this.ctx
     ctx.body = await ctx.service.user.createUserFromInter()
   }
+  async getWx() {
+    const ctx = this.ctx
+    ctx.body = await ctx.service.user.getWx()
+  }
 }
 
 module.exports = UserController
